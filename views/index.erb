@@ -1,0 +1,10 @@
+
+<h2>メモアプリケーション</h2>
+
+<ul>
+  <% @memos.each do |memo| %>
+    <li><a href='/memos/<%= "#{memo["id"].to_s}" %>'><%= memo["title"] %></a></li>
+  <% end %>
+</ul>
+
+<a href="/memos/new">追加</button>
