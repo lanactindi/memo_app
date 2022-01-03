@@ -9,6 +9,9 @@ helpers do
     Rack::Utils.escape_html(text)
   end
 end
+require 'pg'
+
+CONN = PG.connect(dbname: 'postgres')
 
 get '/' do
   redirect to '/memos'
@@ -20,11 +23,10 @@ get '/memos' do
 end
 
 post '/memos' do
-  memo = { 'id': SecureRandom.uuid, 'title': params[:title], 'content': params[:content] }
-  load_memos
-  @memos << memo
-  rewrite_json
-  redirect to "/memos/#{memo[:id]}"
+  memo_id = SecureRandom.alphanumeric(8)
+  results = CONN.exec("insert into memos values('#{memo_id}','#{params[:title]}','#{params[:content]}')")
+  redirect to '/sql_error' if results.nil?
+  redirect to "/memos/#{memo_id}"
 end
 
 get '/memos/new' do
@@ -44,18 +46,16 @@ get '/memos/:id/edit' do
   erb :edit
 end
 
-patch '/memos/:id' do
-  load_memo
-  @memo['title'] = params[:title]
-  @memo['content'] = params[:content]
-  rewrite_json
-  redirect to "/memos/#{@memo['id']}"
+patch '/memos/:id/edit' do
+  results = CONN.exec("update memos set title = '#{params[:title]}', content= '#{params[:content]}'
+             where id = '#{params[:id]}'")
+  redirect to '/sql_error' if results.nil?
+  redirect to "/memos/#{params[:id]}"
 end
 
 delete '/memos/:id' do
-  load_memos
-  @memos.delete_if { |memo| memo['id'] == params[:id] }
-  rewrite_json
+  results = CONN.exec("delete from memos where id = '#{params[:id]}'")
+  redirect to '/sql_error' if results.nil?
   redirect to '/memos'
 end
 
@@ -63,21 +63,20 @@ get '/not_found' do
   @title = '404 データ見つかれません'
 end
 
+get '/sql_error' do
+  @title = '500 サーバーエラーになりました'
+end
+
 private
 
 def load_memo
-  load_memos
-  @memo = @memos.find { |memo| memo['id'] == params[:id] }
-  redirect to '/not_found' if @memo.nil?
+  @title = 'メモ内容'
+  @memos = CONN.exec("select * from memos where id = '#{params[:id]}'")
+  redirect to '/not_found' if @memos.nil?
+  @memo = @memos[0]
 end
 
 def load_memos
-  file = File.read('./data/memo.json')
-  @memos = JSON.parse(file)
-end
-
-def rewrite_json
-  File.open('./data/memo.json', 'w') do |f|
-    f.write(JSON.pretty_generate(@memos))
-  end
+  @memos = CONN.exec('select * from memos')
+  redirect to '/not_found' if @memos.nil?
 end
