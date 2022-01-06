@@ -2,6 +2,13 @@
 
 require 'sinatra'
 require 'json'
+require 'erb'
+
+helpers do
+  def h(text)
+    Rack::Utils.escape_html(text)
+  end
+end
 
 get '/' do
   redirect to '/memos'
@@ -13,7 +20,7 @@ get '/memos' do
 end
 
 post '/memos' do
-  memo = { "id": SecureRandom.alphanumeric(8), "title": params[:title], "content": params[:content] }
+  memo = { 'id': SecureRandom.uuid, 'title': h(params[:title]), 'content': h(params[:content]) }
   load_memos
   @memos << memo
   rewrite_json
@@ -37,19 +44,19 @@ get '/memos/:id/edit' do
   erb :edit
 end
 
-patch '/memos/:id/edit' do
-  load_memo_index
-  @memo = @memos.delete_at(@memo_index)
-  @memo['title'] = params[:title]
-  @memo['content'] = params[:content]
+patch '/memos/:id' do
+  load_memo
+  @memos.delete_if { |memo| memo['id'] == params[:id] }
+  @memo['title'] = h(params[:title])
+  @memo['content'] = h(params[:content])
   @memos << @memo
   rewrite_json
   redirect to "/memos/#{@memo['id']}"
 end
 
 delete '/memos/:id' do
-  load_memo_index
-  @memo = @memos.delete_at(@memo_index)
+  load_memos
+  @memos = @memos.delete_if { |memo| memo['id'] == params[:id]}
   rewrite_json
   redirect to '/memos'
 end
@@ -66,13 +73,6 @@ def load_memo
   @memos = JSON.parse(file)
   @memo = @memos.find { |memo| memo['id'] == params[:id] }
   redirect to '/not_found' if @memo.nil?
-end
-
-def load_memo_index
-  file = File.read('./data/memo.json')
-  @memos = JSON.parse(file)
-  @memo_index = @memos.index { |memo| memo['id'] == params[:id] }
-  redirect to '/not_found' if @memo_index == -1
 end
 
 def load_memos

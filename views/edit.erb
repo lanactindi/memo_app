@@ -1,7 +1,7 @@
 
 <h2>メモアプリケーション</h2>
 
-<form action='/memos/<%= "#{@memo["id"].to_s}/edit" %>' method='post'>
+<form action='/memos/<%= "#{@memo["id"].to_s}" %>' method='post'>
     <label for="title">タイトル:</label>
     <input type="text" id="title" name="title" value="<%= @memo["title"] %>"><br><br>
     <label for="content">コンテント:</label>
