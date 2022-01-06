@@ -3,13 +3,13 @@
 require 'sinatra'
 require 'json'
 require 'erb'
+require 'pg'
 
 helpers do
   def h(text)
     Rack::Utils.escape_html(text)
   end
 end
-require 'pg'
 
 CONN = PG.connect(dbname: 'postgres')
 
@@ -23,8 +23,8 @@ get '/memos' do
 end
 
 post '/memos' do
-  memo_id = SecureRandom.alphanumeric(8)
-  results = CONN.exec("insert into memos values('#{memo_id}','#{params[:title]}','#{params[:content]}')")
+  memo_id = SecureRandom.uuid
+  results = CONN.exec("insert into memos values('#{memo_id}','#{h params[:title]}','#{h params[:content]}')")
   redirect to '/sql_error' if results.nil?
   redirect to "/memos/#{memo_id}"
 end
@@ -46,8 +46,8 @@ get '/memos/:id/edit' do
   erb :edit
 end
 
-patch '/memos/:id/edit' do
-  results = CONN.exec("update memos set title = '#{params[:title]}', content= '#{params[:content]}'
+patch '/memos/:id' do
+  results = CONN.exec("update memos set title = '#{h params[:title]}', content= '#{h params[:content]}'
              where id = '#{params[:id]}'")
   redirect to '/sql_error' if results.nil?
   redirect to "/memos/#{params[:id]}"
