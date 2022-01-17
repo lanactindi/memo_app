@@ -27,7 +27,7 @@ end
 post '/memos' do
   connection = connect_to_db
   memo_id = SecureRandom.uuid
-  results = connection.exec("insert into memos values('#{memo_id}','#{params[:title]}','#{params[:content]}')")
+  results = connection.exec_params('insert into memos values($1, $2, $3)', [memo_id, params[:title], params[:content]])
   redirect to '/sql_error' if results.nil?
   redirect to "/memos/#{memo_id}"
 end
@@ -51,15 +51,15 @@ end
 
 patch '/memos/:id' do
   connection = connect_to_db
-  results = connection.exec("update memos set title = '#{params[:title]}', content= '#{params[:content]}'
-             where id = '#{params[:id]}'")
+  results = connection.exec_params('update memos set title = $1, content= $2
+             where id = $3', [params[:title], params[:content], params[:id]])
   redirect to '/sql_error' if results.nil?
   redirect to "/memos/#{params[:id]}"
 end
 
 delete '/memos/:id' do
   connection = connect_to_db
-  results = connection.exec("delete from memos where id = '#{params[:id]}'")
+  results = connection.exec_params('delete from memos where id = $1', [params[:id]])
   redirect to '/sql_error' if results.nil?
   redirect to '/memos'
 end
@@ -76,7 +76,7 @@ private
 
 def load_memo
   connection = connect_to_db
-  @memos = connection.exec("select * from memos where id = '#{params[:id]}'")
+  @memos = connection.exec_params('select * from memos where id = $1', [params[:id]])
   redirect to '/not_found' if @memos.nil?
   @memo = @memos[0]
 end
