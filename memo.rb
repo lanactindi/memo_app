@@ -11,7 +11,9 @@ helpers do
   end
 end
 
-CONN = PG.connect(dbname: 'postgres')
+def connect_to_db
+  PG.connect(dbname: 'postgres')
+end
 
 get '/' do
   redirect to '/memos'
@@ -23,8 +25,9 @@ get '/memos' do
 end
 
 post '/memos' do
+  connection = connect_to_db
   memo_id = SecureRandom.uuid
-  results = CONN.exec("insert into memos values('#{memo_id}','#{h params[:title]}','#{h params[:content]}')")
+  results = connection.exec("insert into memos values('#{memo_id}','#{params[:title]}','#{params[:content]}')")
   redirect to '/sql_error' if results.nil?
   redirect to "/memos/#{memo_id}"
 end
@@ -47,14 +50,16 @@ get '/memos/:id/edit' do
 end
 
 patch '/memos/:id' do
-  results = CONN.exec("update memos set title = '#{h params[:title]}', content= '#{h params[:content]}'
+  connection = connect_to_db
+  results = connection.exec("update memos set title = '#{params[:title]}', content= '#{params[:content]}'
              where id = '#{params[:id]}'")
   redirect to '/sql_error' if results.nil?
   redirect to "/memos/#{params[:id]}"
 end
 
 delete '/memos/:id' do
-  results = CONN.exec("delete from memos where id = '#{params[:id]}'")
+  connection = connect_to_db
+  results = connection.exec("delete from memos where id = '#{params[:id]}'")
   redirect to '/sql_error' if results.nil?
   redirect to '/memos'
 end
@@ -70,13 +75,14 @@ end
 private
 
 def load_memo
-  @title = 'メモ内容'
-  @memos = CONN.exec("select * from memos where id = '#{params[:id]}'")
+  connection = connect_to_db
+  @memos = connection.exec("select * from memos where id = '#{params[:id]}'")
   redirect to '/not_found' if @memos.nil?
   @memo = @memos[0]
 end
 
 def load_memos
-  @memos = CONN.exec('select * from memos')
+  connection = connect_to_db
+  @memos = connection.exec('select * from memos')
   redirect to '/not_found' if @memos.nil?
 end
