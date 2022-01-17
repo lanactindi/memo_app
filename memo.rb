@@ -20,7 +20,7 @@ get '/memos' do
 end
 
 post '/memos' do
-  memo = { 'id': SecureRandom.uuid, 'title': h(params[:title]), 'content': h(params[:content]) }
+  memo = { 'id': SecureRandom.uuid, 'title': params[:title], 'content': params[:content] }
   load_memos
   @memos << memo
   rewrite_json
@@ -46,17 +46,15 @@ end
 
 patch '/memos/:id' do
   load_memo
-  @memos.delete_if { |memo| memo['id'] == params[:id] }
-  @memo['title'] = h(params[:title])
-  @memo['content'] = h(params[:content])
-  @memos << @memo
+  @memo['title'] = params[:title]
+  @memo['content'] = params[:content]
   rewrite_json
   redirect to "/memos/#{@memo['id']}"
 end
 
 delete '/memos/:id' do
   load_memos
-  @memos = @memos.delete_if { |memo| memo['id'] == params[:id]}
+  @memos.delete_if { |memo| memo['id'] == params[:id] }
   rewrite_json
   redirect to '/memos'
 end
@@ -68,9 +66,7 @@ end
 private
 
 def load_memo
-  @title = 'メモ内容'
-  file = File.read('./data/memo.json')
-  @memos = JSON.parse(file)
+  load_memos
   @memo = @memos.find { |memo| memo['id'] == params[:id] }
   redirect to '/not_found' if @memo.nil?
 end

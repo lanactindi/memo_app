@@ -3,7 +3,7 @@
 
 <ul>
   <% @memos.each do |memo| %>
-    <li><a href='/memos/<%= "#{memo["id"].to_s}" %>'><%= memo["title"] %></a></li>
+    <li><a href='/memos/<%= "#{h(memo["id"]).to_s}" %>'><%= h(memo["title"]) %></a></li>
   <% end %>
 </ul>
 
