@@ -1,0 +1,10 @@
+<h3><%= h(@memo["title"]) %></h3>
+
+<p><%= h(@memo["content"]) %></p>
+<a class="edit_button" href='/memos/<%= "#{h(@memo["id"]).to_s}/edit" %>'>
+    <button>修正</button>
+</a>
+<form class="delete_button" method="post" action='/memos/<%= "#{h(@memo["id"]).to_s}" %>' class="memo-main__form">
+    <input type="hidden" name="_method" value="DELETE">
+    <input type="submit" value="削除">
+</form>

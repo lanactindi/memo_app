@@ -1,0 +1,11 @@
+
+<h2>メモアプリケーション</h2>
+
+<form action='/memos/<%= "#{h(@memo["id"]).to_s}" %>' method='post'>
+    <label for="title">タイトル:</label>
+    <input type="text" required id="title" name="title" value="<%= h(@memo["title"]) %>"><br><br>
+    <label for="content">コンテント:</label>
+    <input type="text" required id="content" name="content" value="<%= h(@memo["content"]) %>"><br><br>
+    <input type="hidden" name="_method" value="PATCH">
+    <button type='submit'>修正</button>
+</form>
